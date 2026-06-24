@@ -1,0 +1,18 @@
+# Compiled binaries and build artifacts
+*.exe
+*.o
+*.obj
+*.out
+*.layout
+Makefile.win
+
+# Generated benchmark datasets
+datasets/data_*.txt
+
+# Python cache and rendered figures
+__pycache__/
+*.pyc
+*.png
+
+# Editor settings
+.vscode/
