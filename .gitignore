@@ -6,13 +6,9 @@
 *.layout
 Makefile.win
 
-# Generated benchmark datasets
-datasets/data_*.txt
-
-# Python cache and rendered figures
+# Python cache
 __pycache__/
 *.pyc
-*.png
 
 # Editor settings
 .vscode/
