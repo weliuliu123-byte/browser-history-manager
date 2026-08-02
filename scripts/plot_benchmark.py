@@ -1,56 +1,93 @@
-import matplotlib.pyplot as plt
+import argparse
+import csv
+from pathlib import Path
+import matplotlib
 
-# ---------------------------------------------------------
-# 1. Measured benchmark results (microseconds)
-# ---------------------------------------------------------
-N = [10, 100, 1000, 5000, 10000]
 
-dll_search = [0.68, 5.64, 57.17, 352.19, 602.65]
-ts_search  = [1.53, 13.64, 148.89, 733.50, 1417.31]
+def load_metrics(csv_path: Path):
+    rows = []
+    with csv_path.open("r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            rows.append({k: float(v) if k != "N" else int(v) for k, v in r.items()})
+    return rows
 
-dll_delete = [0.74, 6.28, 74.22, 403.16, 796.65]
-ts_delete  = [1.27, 13.39, 145.78, 712.12, 1527.33]
 
-dll_back = [1.50e-03, 2.40e-03, 0.04, 0.02, 0.02]
-ts_back  = [4.40e-03, 0.02, 0.19, 0.15, 0.15]
+def render_comparison(rows, save_path: Path, show: bool = False):
+    import matplotlib.pyplot as plt
 
-dll_forward = [1.40e-03, 1.60e-03, 8.30e-03, 6.80e-03, 5.70e-03]
-ts_forward  = [4.70e-03, 0.02, 0.15, 0.15, 0.14]
+    N = [r["N"] for r in rows]
+    dll_search = [r["dll_search_us"] for r in rows]
+    ts_search = [r["ts_search_us"] for r in rows]
+    dll_delete = [r["dll_delete_us"] for r in rows]
+    ts_delete = [r["ts_delete_us"] for r in rows]
+    dll_back = [r["dll_back_us"] for r in rows]
+    ts_back = [r["ts_back_us"] for r in rows]
+    dll_forward = [r["dll_forward_us"] for r in rows]
+    ts_forward = [r["ts_forward_us"] for r in rows]
 
-# ---------------------------------------------------------
-# 2. Plot configuration
-# ---------------------------------------------------------
-USE_LOG_SCALE = True 
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+    fig.suptitle(
+        "Benchmark: Doubly Linked List vs Two-Stack Simulator (Windows QPC)",
+        fontsize=15,
+        fontweight="bold",
+    )
 
-fig, axs = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('Benchmark: Doubly Linked List vs Two-Stack Simulator', fontsize=16, fontweight='bold')
+    dll_style = {"color": "#0d6efd", "marker": "o", "linewidth": 2, "label": "DLL (BrowserHistory)"}
+    ts_style = {"color": "#dc3545", "marker": "s", "linewidth": 2, "label": "Two-Stack Simulator"}
 
-dll_style = {'color': '#0d6efd', 'marker': 'o', 'linewidth': 2, 'label': 'DLL (BrowserHistory)'}
-ts_style  = {'color': '#dc3545', 'marker': 's', 'linewidth': 2, 'label': 'Two-Stack Simulator'}
+    def plot_panel(ax, data_dll, data_ts, title):
+        ax.plot(N, data_dll, **dll_style)
+        ax.plot(N, data_ts, **ts_style)
+        ax.set_title(title, fontweight="bold")
+        ax.set_xlabel("Dataset size (N pages)", labelpad=8)
+        ax.set_ylabel("Latency (microseconds)", labelpad=8)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.grid(True, which="both", linestyle="--", alpha=0.45)
+        ax.legend()
 
-def plot_chart(ax, data_dll, data_ts, title, use_log_y=False):
-    ax.plot(N, data_dll, **dll_style)
-    ax.plot(N, data_ts, **ts_style)
-    ax.set_title(title, fontweight='bold')
-    ax.set_xlabel('Dataset size (N pages)', labelpad=10)
-    ax.set_ylabel('Latency (microseconds)', labelpad=10)
-    ax.grid(True, linestyle='--', alpha=0.6)
-    ax.legend()
-    
-    if USE_LOG_SCALE:
-        ax.set_xscale('log')
-        if use_log_y:
-            ax.set_yscale('log')
+    plot_panel(axs[0, 0], dll_search, ts_search, "Search (Keyword Scan)")
+    plot_panel(axs[0, 1], dll_delete, ts_delete, "Delete (By URL)")
+    plot_panel(axs[1, 0], dll_back, ts_back, "Back Navigation O(1)")
+    plot_panel(axs[1, 1], dll_forward, ts_forward, "Forward Navigation O(1)")
 
-# ---------------------------------------------------------
-# 3. Render 2x2 latency comparison subplots
-# ---------------------------------------------------------
-plot_chart(axs[0, 0], dll_search, ts_search, 'Search', use_log_y=True)
-plot_chart(axs[0, 1], dll_delete, ts_delete, 'Delete', use_log_y=True)
-plot_chart(axs[1, 0], dll_back, ts_back, 'Back', use_log_y=True)
-plot_chart(axs[1, 1], dll_forward, ts_forward, 'Forward', use_log_y=True)
+    plt.tight_layout(pad=3.5, w_pad=3.5, h_pad=3.5, rect=[0, 0, 1, 0.94])
 
-# Add generous spacing so subplot labels do not overlap
-plt.tight_layout(pad=4.0, w_pad=4.0, h_pad=4.0, rect=[0, 0, 1, 0.95])
+    if save_path is not None:
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(save_path, dpi=200)
+        print(f"Saved comparison chart to {save_path}")
 
-plt.show()
+    if show:
+        plt.show()
+    plt.close(fig)
+
+
+def main():
+    repo_root = Path(__file__).resolve().parent.parent
+    parser = argparse.ArgumentParser(description="Plot DLL vs Two-Stack benchmark metrics.")
+    parser.add_argument(
+        "--csv",
+        type=Path,
+        default=repo_root / "results" / "benchmark_metrics.csv",
+        help="Input benchmark metrics CSV path",
+    )
+    parser.add_argument(
+        "--save",
+        type=Path,
+        default=repo_root / "results" / "benchmark_latency.png",
+        help="Output PNG chart path",
+    )
+    parser.add_argument("--show", action="store_true", help="Display interactive matplotlib window")
+    args = parser.parse_args()
+
+    if not args.show:
+        matplotlib.use("Agg")
+
+    rows = load_metrics(args.csv)
+    render_comparison(rows, args.save, show=args.show)
+
+
+if __name__ == "__main__":
+    main()
