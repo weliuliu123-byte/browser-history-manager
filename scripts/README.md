@@ -1,16 +1,15 @@
 # Visualization Scripts (`scripts/`)
 
-Helper scripts for plotting comparative latency curves from benchmark runs.
+Python plotting utilities driven directly by captured QPC benchmark measurements in [`results/benchmark_metrics.csv`](../results/benchmark_metrics.csv).
 
 ---
 
-## `plot_benchmark.py`
+## Scripts
 
-Renders a `2x2` `matplotlib` figure comparing **Doubly Linked List (`BrowserHistory`)** against **Two-Stack Simulator** across `N = 10, 100, 1000, 5000, 10000` on log-scaled axes (`USE_LOG_SCALE = True`):
-
-- **Search Latency (`us`):** Highlights `O(N)` linear scan scaling vs stack pop/push overhead.
-- **Delete Latency (`us`):** Compares in-place DLL node unlinking against full two-stack rebuilds.
-- **Back & Forward Latency (`us`):** Verifies near-constant `O(1)` navigation across all dataset sizes.
+| Script | Purpose | Default Output |
+| :--- | :--- | :--- |
+| `plot_benchmark.py` | Renders a 2x2 log-log latency comparison (`DLL` vs `TwoStackSimulator`) for Search, Delete, Back, and Forward | `results/benchmark_latency.png` |
+| `plot_dll_scaling.py` | Renders a dual-axis chart comparing DLL heap RAM delta (`KB`) against `O(N)` Search & Delete latency (`us`) | `results/dll_performance.png` |
 
 ---
 
@@ -20,5 +19,8 @@ Requires Python 3 with `matplotlib`:
 
 ```bash
 pip install matplotlib
-python scripts/plot_benchmark.py
+python scripts/plot_benchmark.py --save results/benchmark_latency.png
+python scripts/plot_dll_scaling.py --save results/dll_performance.png
 ```
+
+Pass `--show` to open an interactive `matplotlib` window instead of headless `Agg` export.
