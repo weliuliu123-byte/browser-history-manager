@@ -4,29 +4,32 @@ A modular C++11 console application and benchmarking suite comparing a custom **
 
 **Author:** Ha Gia Bao  
 **Contact:** `weliuliu123@gmail.com`  
-**Toolchain:** C++11 (`g++` / TDM-GCC), Windows PSAPI (`-lpsapi`), Python 3 (`matplotlib`)
+**Toolchain:** C++11 (`g++` / TDM-GCC-64), Windows PSAPI (`-lpsapi`), Python 3 (`matplotlib`)
 
 ---
 
-## Engineering Overview
-
-The project implements stateful browser session navigation alongside quantitative latency and working-set profiling:
+## System Architecture
 
 - **History Engine (`BrowserHistory`):** Custom Doubly Linked List supporting `O(1)` forward/back pointer traversal, mid-history branch truncation on new visits, case-insensitive keyword search, and safe node relinking on deletion.
 - **Bounded Cache (`CacheStack`):** Singly-linked LIFO stack capped at `100` unique URLs, suppressing duplicates and evicting the oldest bottom node upon overflow.
-- **Benchmark Harness (`TwoStackSimulator` + QPC):** Measures 1,000-iteration average latency via Windows `QueryPerformanceCounter` and resident memory delta via `GetProcessMemoryInfo` (`psapi.dll`) from `N = 10` to `10,000`.
+- **Benchmark Harness (`TwoStackSimulator` + QPC):** Measures 1,000-iteration average latency via Windows `QueryPerformanceCounter` and resident memory delta via `GetProcessMemoryInfo` (`psapi.dll`) across `N = 10` to `10,000`.
+- **Architecture & Algorithm Diagrams:** UML class design and orthogonal algorithm flowcharts stored under [`docs/diagrams/`](docs/diagrams/).
 
 ---
 
-## Complexity & Subsystem Summary
+## Subsystem & Verification Summary
 
-| Component | Operations | Time Complexity | Module Documentation |
-| :--- | :--- | :---: | :--- |
-| **Public Interfaces** | `Page`, `DLLNode`, `BrowserHistory`, `CacheStack`, `Utils` | — | [`include/README.md`](include/README.md) |
-| **Core Implementations** | `visit`, `back`, `forward` (`O(1)`); `search`, `delete`, bounded `push` (`O(N)`) | `O(1)` / `O(N)` | [`src/README.md`](src/README.md) |
-| **Benchmark Suite** | `TwoStackSimulator` parity & Windows QPC profiler (`N = 10..10000`) | `O(1)` / `O(N)` | [`benchmarks/README.md`](benchmarks/README.md) |
-| **Synthetic Workloads** | Reproducible `url,title` dataset generator (`10` to `10,000` rows) | — | [`datasets/README.md`](datasets/README.md) |
-| **Visualization** | 2x2 log-scale latency comparison charts (`matplotlib`) | — | [`scripts/README.md`](scripts/README.md) |
+| Component | Purpose | Verification Status | Module Documentation |
+| :--- | :--- | :--- | :--- |
+| **Governance** | Branching model, commit rules, 1-to-1 scope table | Complete | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| **Public Headers** | `Page`, `DLLNode`, `BrowserHistory`, `CacheStack`, `Utils`, `Benchmark` | Compiles clean (`-Wall`) | [`include/README.md`](include/README.md) |
+| **Core Engine** | DLL history navigation, bounded LIFO cache, CLI menu controller | CLI & UT verified | [`src/README.md`](src/README.md) |
+| **Benchmark Harness** | `TwoStackSimulator` vs DLL latency & PSAPI RAM delta profiler | Captured (`N = 10..10000`) | [`benchmarks/README.md`](benchmarks/README.md) |
+| **Unit & Parity Tests** | 5 C++ assertion suites (`UT-01..UT-05`) covering core & CSV ingestion | `5/5` Passed (exit `0`) | [`tests/README.md`](tests/README.md) |
+| **Tracked Workloads** | Synthetic `url,title` text datasets (`10` to `10,000` rows) | Verified CLI Option `11` | [`datasets/README.md`](datasets/README.md) |
+| **Plotting Scripts** | Log-log latency & dual-axis RAM/latency PNG chart generators | Rendered headlessly | [`scripts/README.md`](scripts/README.md) |
+| **Captured Results** | Raw QPC stdout report, metrics CSV, and rendered charts | Verified on Windows QPC | [`results/README.md`](results/README.md) |
+| **Architecture Docs** | System architecture, UML class diagram, 4 algorithm flowcharts | Complete | [`docs/README.md`](docs/README.md) |
 
 ---
 
@@ -34,49 +37,58 @@ The project implements stateful browser session navigation alongside quantitativ
 
 | Path | Description |
 | :--- | :--- |
-| `README.md` | Root architecture overview, build instructions, and benchmark summary |
-| `Makefile` | CLI build configuration (`g++ -std=c++11 -O2 -Iinclude ... -lpsapi`) |
+| `README.md` | Root architecture overview, build/test steps, and measured results |
+| `CONTRIBUTING.md` | Development order, branching rules, Conventional Commits, and scope mapping |
+| `Makefile` | CLI build and automated test targets (`all`, `test`, `clean`) |
 | `Project_topic_9.dev` | Dev-C++ IDE project configuration |
-| `.gitignore` | Excludes compiled binaries (`*.exe`, `*.o`), generated `.txt` datasets, and caches |
-| `include/` | Clean header interfaces (`Page.h`, `DLLNode.h`, `BrowserHistory.h`, `CacheStack.h`, `Benchmark.h`, `Utils.h`) |
+| `.gitignore` | Excludes compiled binaries (`*.exe`, `*.o`), Python caches, and IDE clutter |
+| `include/` | Clean header contracts (`Page.h`, `DLLNode.h`, `BrowserHistory.h`, `CacheStack.h`, `Benchmark.h`, `Utils.h`) |
 | `src/` | Core C++ source files (`main.cpp`, `BrowserHistory.cpp`, `CacheStack.cpp`, `Utils.cpp`) |
 | `benchmarks/` | `TwoStackSimulator` implementation and multi-scale QPC profiler (`Benchmark.cpp`) |
-| `datasets/` | Python workload generator (`generate_datasets.py`) |
-| `scripts/` | Latency visualization script (`plot_benchmark.py`) |
+| `tests/` | Automated C++ unit and dataset parity suite (`test_history_and_cache.cpp`) |
+| `datasets/` | Python workload generator (`generate_datasets.py`) and generated `data_*.txt` workloads |
+| `scripts/` | Matplotlib visualization scripts (`plot_benchmark.py`, `plot_dll_scaling.py`) |
+| `results/` | Captured benchmark output (`benchmark_report.txt`, `benchmark_metrics.csv`, PNG charts) |
+| `docs/` | System design UML, architecture overview, and algorithm flowcharts (`docs/diagrams/`) |
 
 ---
 
-## Build & Run
+## Build, Test & Plot
 
-### 1. Generate Synthetic Datasets (for Menu Option `11`)
+### 1. Build & Run Interactive CLI
 ```bash
-cd datasets
-python generate_datasets.py
-cd ..
-```
-
-### 2. Compile & Execute
-Using `g++` (TDM-GCC / MinGW-w64) or `make`:
-
-```bash
-g++ -std=c++11 -O2 -Iinclude src/main.cpp src/BrowserHistory.cpp src/CacheStack.cpp src/Utils.cpp benchmarks/Benchmark.cpp -lpsapi -o browser_history.exe
+g++ -std=c++11 -O2 -Wall -Wextra -Iinclude src/main.cpp src/BrowserHistory.cpp src/CacheStack.cpp src/Utils.cpp benchmarks/Benchmark.cpp -lpsapi -o browser_history.exe
 ./browser_history.exe
 ```
 
+### 2. Run Automated Unit & Dataset Parity Tests (`UT-01..UT-05`)
+```bash
+g++ -std=c++11 -O2 -Wall -Wextra -Iinclude tests/test_history_and_cache.cpp src/BrowserHistory.cpp src/CacheStack.cpp src/Utils.cpp benchmarks/Benchmark.cpp -lpsapi -o test_suite.exe
+./test_suite.exe
+```
+
+### 3. Regenerate Datasets & Charts
+```bash
+cd datasets && python generate_datasets.py && cd ..
+python scripts/plot_benchmark.py --save results/benchmark_latency.png
+python scripts/plot_dll_scaling.py --save results/dll_performance.png
+```
+
 ---
 
-## Measured Benchmark Snapshot (Windows QPC, 1,000 Iterations)
+## Measured Benchmark Results (Windows QPC, 1,000 Iterations)
 
-Observed via CLI Option `10` (`Run Performance Benchmark`):
+Captured verbatim in [`results/benchmark_report.txt`](results/benchmark_report.txt) and [`results/benchmark_metrics.csv`](results/benchmark_metrics.csv):
 
 | `N` | DLL Memory Delta | TS Memory Delta | DLL Search (`us`) | TS Search (`us`) | DLL Delete (`us`) | TS Delete (`us`) | DLL Back (`us`) | TS Back (`us`) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `10` | `8.00 KB` | `8.00 KB` | `0.98` | `1.65` | `0.82` | `1.28` | `1.60e-03` | `4.70e-03` |
-| `100` | `20.00 KB` | `8.00 KB` | `6.25` | `14.07` | `7.75` | `13.95` | `2.50e-03` | `0.02` |
-| `1000` | `120.00 KB` | `96.00 KB` | `60.25` | `136.19` | `81.40` | `145.58` | `0.03` | `0.15` |
-| `5000` | `612.00 KB` | `520.00 KB` | `330.31` | `701.44` | `433.57` | `739.73` | `0.03` | `0.34` |
-| `10000` | `1088.00 KB` | `1008.00 KB` | `678.22` | `1427.46` | `887.67` | `1464.58` | `0.02` | `0.18` |
+| `10` | `16.00 KB` | `4.00 KB` | `0.20` | `0.61` | `0.19` | `0.48` | `6.00e-04` | `2.70e-03` |
+| `100` | `24.00 KB` | `12.00 KB` | `1.80` | `5.22` | `1.55` | `5.33` | `1.40e-03` | `0.01` |
+| `1000` | `120.00 KB` | `100.00 KB` | `17.46` | `50.70` | `16.94` | `50.63` | `0.02` | `0.12` |
+| `5000` | `628.00 KB` | `528.00 KB` | `86.54` | `265.07` | `88.87` | `259.69` | `0.03` | `0.10` |
+| `10000` | `1052.00 KB` | `1024.00 KB` | `192.30` | `551.27` | `179.18` | `531.42` | `0.02` | `0.11` |
 
-Key takeaways:
-- Both structures achieve sub-microsecond `O(1)` `Back`/`Forward` navigation across all tested sizes.
-- Direct Doubly Linked List traversal reduces `Search` and `Delete` latency by roughly 2x compared to copying elements through a temporary stack in `TwoStackSimulator`.
+Visualizations:
+- Comparative 2x2 Latency Curve: [`results/benchmark_latency.png`](results/benchmark_latency.png)
+- DLL Memory vs `O(N)` Latency Scaling: [`results/dll_performance.png`](results/dll_performance.png)
+- System UML & Algorithm Diagrams: [`docs/README.md`](docs/README.md)
