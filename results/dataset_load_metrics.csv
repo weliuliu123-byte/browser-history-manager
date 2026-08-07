@@ -1,0 +1,6 @@
+N,load_time_us,working_set_kb,dataset_file
+10,1000.00,4264,datasets/data_10.txt
+100,2000.00,4356,datasets/data_100.txt
+1000,14002.00,4632,datasets/data_1000.txt
+5000,67000.00,5800,datasets/data_5000.txt
+10000,127733.00,7112,datasets/data_10000.txt
