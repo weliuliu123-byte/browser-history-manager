@@ -1,80 +1,102 @@
 import argparse
-import csv
+import sys
 from pathlib import Path
 import matplotlib
 
 
-def load_metrics(csv_path: Path):
-    rows = []
-    with csv_path.open("r", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            rows.append({k: float(v) if k != "N" else int(v) for k, v in r.items()})
-    return rows
-
-
-def render_dll_scaling(rows, save_path: Path, show: bool = False):
+def render_dll_dashboard(ds_rows, qpc_rows, save_path: Path, show: bool = False):
     import matplotlib.pyplot as plt
 
-    labels = [f"N={r['N']:,}" for r in rows]
-    x_pos = list(range(len(rows)))
-    ram_kb = [r["dll_ram_delta_kb"] for r in rows]
-    search_us = [r["dll_search_us"] for r in rows]
-    delete_us = [r["dll_delete_us"] for r in rows]
+    fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(15.5, 6.6), dpi=200)
+    fig.patch.set_facecolor("#F8FAFC")
+    fig.suptitle(
+        "Live DLL Performance Dashboard: Real Dataset Ingestion & In-Memory QPC Scaling",
+        fontsize=14.5,
+        fontweight="bold",
+        color="#0F172A",
+    )
 
-    fig, ax1 = plt.subplots(figsize=(10.5, 6))
+    # Panel A: Option 11 Real Dataset File Ingestion (Working Set KB vs Load Time us)
+    labels_ds = [f"N={r['N']:,}" for r in ds_rows]
+    x_ds = list(range(len(ds_rows)))
+    ram_ws = [r["working_set_kb"] for r in ds_rows]
+    load_us = [r["load_time_us"] for r in ds_rows]
 
-    bar_color = "#3498db"
-    bars = ax1.bar(x_pos, ram_kb, color=bar_color, alpha=0.72, width=0.5, label="DLL RAM Delta (KB)")
-    ax1.set_xlabel("Dataset Size (N Pages)", fontsize=11, fontweight="bold", labelpad=8)
-    ax1.set_ylabel("Heap Working-Set Delta (KB)", color=bar_color, fontsize=11, fontweight="bold")
-    ax1.tick_params(axis="y", labelcolor=bar_color)
-    ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(labels, fontsize=10, fontweight="bold")
-    ax1.set_ylim(0, max(ram_kb) * 1.22)
-    ax1.grid(axis="y", linestyle="--", alpha=0.35)
+    ax_left.set_facecolor("#FFFFFF")
+    bars_l = ax_left.bar(x_ds, ram_ws, width=0.48, color="#3B82F6", alpha=0.72, label="Working Set RAM (KB)")
+    ax_left.set_title("CLI Option 11: Real Dataset File Ingestion (datasets/data_*.txt)", fontweight="bold", color="#1E293B", pad=10)
+    ax_left.set_xlabel("Loaded Dataset Size (N Rows)", fontweight="bold", labelpad=8)
+    ax_left.set_ylabel("Process Working Set (KB)", color="#1D4ED8", fontweight="bold")
+    ax_left.tick_params(axis="y", labelcolor="#1D4ED8")
+    ax_left.set_xticks(x_ds)
+    ax_left.set_xticklabels(labels_ds, fontweight="bold")
+    ax_left.set_ylim(0, max(ram_ws) * 1.28)
+    ax_left.grid(axis="y", linestyle="--", alpha=0.35)
 
-    for bar in bars:
-        val = bar.get_height()
-        ax1.text(
-            bar.get_x() + bar.get_width() / 2,
-            val + max(ram_kb) * 0.02,
-            f"{val:.0f} KB",
-            ha="center",
-            va="bottom",
-            color="#1f6fa8",
-            fontweight="bold",
-            fontsize=9,
-        )
+    for b in bars_l:
+        val = b.get_height()
+        ax_left.text(b.get_x() + b.get_width() / 2, val + max(ram_ws) * 0.02, f"{val:.0f} KB",
+                     ha="center", va="bottom", color="#1E40AF", fontsize=8.5, fontweight="bold")
 
-    ax2 = ax1.twinx()
-    ax2.plot(x_pos, search_us, color="#e74c3c", linewidth=2.5, marker="o", markersize=7, label="Search Latency (us)")
-    ax2.plot(x_pos, delete_us, color="#f39c12", linewidth=2.2, linestyle="--", marker="s", markersize=6, label="Delete Latency (us)")
-    ax2.set_ylabel("O(N) Operation Latency (us)", color="#c0392b", fontsize=11, fontweight="bold")
-    ax2.tick_params(axis="y", labelcolor="#c0392b")
-    ax2.set_ylim(0, max(max(search_us), max(delete_us)) * 1.28)
+    ax_l2 = ax_left.twinx()
+    ax_l2.plot(x_ds, load_us, color="#DC2626", linewidth=2.5, marker="o", markersize=6.5, label="File Load Time (us)")
+    ax_l2.set_ylabel("File Load Elapsed Time (us)", color="#B91C1C", fontweight="bold")
+    ax_l2.tick_params(axis="y", labelcolor="#B91C1C")
+    ax_l2.set_ylim(0, max(load_us) * 1.30 if max(load_us) > 0 else 100)
+
+    for i, val in enumerate(load_us):
+        ax_l2.text(x_ds[i], val + max(load_us) * 0.045, f"{val:,.0f} us",
+                   color="#B91C1C", fontsize=8.3, fontweight="bold", ha="center",
+                   bbox=dict(boxstyle="round,pad=0.14", facecolor="#FFFFFF", edgecolor="none", alpha=0.85))
+
+    l1, lb1 = ax_left.get_legend_handles_labels()
+    l2, lb2 = ax_l2.get_legend_handles_labels()
+    ax_left.legend(l1 + l2, lb1 + lb2, loc="upper left", frameon=True, facecolor="#FFFFFF")
+
+    # Panel B: Option 10 In-Memory Heap Delta vs Search/Delete O(N) Latency
+    labels_qpc = [f"N={r['N']:,}" for r in qpc_rows]
+    x_qpc = list(range(len(qpc_rows)))
+    ram_delta = [r["dll_ram_delta_kb"] for r in qpc_rows]
+    search_us = [r["dll_search_us"] for r in qpc_rows]
+    delete_us = [r["dll_delete_us"] for r in qpc_rows]
+
+    ax_right.set_facecolor("#FFFFFF")
+    bars_r = ax_right.bar(x_qpc, ram_delta, width=0.48, color="#0EA5E9", alpha=0.72, label="DLL Heap Delta (KB)")
+    ax_right.set_title("CLI Option 10: In-Memory DLL Heap Delta vs O(N) Operations", fontweight="bold", color="#1E293B", pad=10)
+    ax_right.set_xlabel("Benchmark Scale (N Nodes)", fontweight="bold", labelpad=8)
+    ax_right.set_ylabel("DLL Memory Delta (KB)", color="#0369A1", fontweight="bold")
+    ax_right.tick_params(axis="y", labelcolor="#0369A1")
+    ax_right.set_xticks(x_qpc)
+    ax_right.set_xticklabels(labels_qpc, fontweight="bold")
+    ax_right.set_ylim(0, max(ram_delta) * 1.25)
+    ax_right.grid(axis="y", linestyle="--", alpha=0.35)
+
+    for b in bars_r:
+        val = b.get_height()
+        ax_right.text(b.get_x() + b.get_width() / 2, val + max(ram_delta) * 0.02, f"{val:.0f} KB",
+                      ha="center", va="bottom", color="#075985", fontsize=8.5, fontweight="bold")
+
+    ax_r2 = ax_right.twinx()
+    ax_r2.plot(x_qpc, search_us, color="#DC2626", linewidth=2.5, marker="o", markersize=6.5, label="Search Latency (us)")
+    ax_r2.plot(x_qpc, delete_us, color="#D97706", linewidth=2.2, linestyle="--", marker="s", markersize=5.8, label="Delete Latency (us)")
+    ax_r2.set_ylabel("QPC 1,000-Iter Avg Latency (us)", color="#B91C1C", fontweight="bold")
+    ax_r2.tick_params(axis="y", labelcolor="#B91C1C")
+    ax_r2.set_ylim(0, max(max(search_us), max(delete_us)) * 1.30)
 
     for i, val in enumerate(search_us):
-        offset_y = max(search_us) * (0.08 if i < 3 else 0.035)
-        offset_x = -0.22 if i == 2 else (-0.18 if i >= 3 else -0.15)
-        ax2.text(
-            x_pos[i] + offset_x,
-            val + offset_y,
-            f"{val:.2f} us",
-            color="#c0392b",
-            fontsize=8.5,
-            fontweight="bold",
-            ha="right",
-        )
+        offset_x = -0.28 if i == 2 else (-0.18 if i >= 3 else -0.14)
+        offset_y = max(search_us) * (0.095 if i == 2 else (0.075 if i < 3 else 0.04))
+        ax_r2.text(x_qpc[i] + offset_x, val + offset_y, f"{val:.2f} us",
+                   color="#B91C1C", fontsize=8.3, fontweight="bold", ha="right")
 
-    plt.title("Doubly Linked List Scaling: Memory Delta vs O(N) Latency", fontsize=13.5, fontweight="bold", pad=14)
-    lines1, lbls1 = ax1.get_legend_handles_labels()
-    lines2, lbls2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, lbls1 + lbls2, loc="upper left", frameon=True, shadow=True)
+    r1, rb1 = ax_right.get_legend_handles_labels()
+    r2, rb2 = ax_r2.get_legend_handles_labels()
+    ax_right.legend(r1 + r2, rb1 + rb2, loc="upper left", frameon=True, facecolor="#FFFFFF")
 
-    plt.tight_layout()
+    plt.tight_layout(pad=2.8, rect=[0, 0, 1, 0.93])
     if save_path is not None:
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(save_path, dpi=200)
+        plt.savefig(save_path, dpi=200, facecolor="#F8FAFC")
         print(f"Saved DLL scaling chart to {save_path}")
 
     if show:
@@ -84,27 +106,26 @@ def render_dll_scaling(rows, save_path: Path, show: bool = False):
 
 def main():
     repo_root = Path(__file__).resolve().parent.parent
-    parser = argparse.ArgumentParser(description="Plot DLL RAM and O(N) latency scaling chart.")
-    parser.add_argument(
-        "--csv",
-        type=Path,
-        default=repo_root / "results" / "benchmark_metrics.csv",
-        help="Input benchmark metrics CSV path",
-    )
-    parser.add_argument(
-        "--save",
-        type=Path,
-        default=repo_root / "results" / "dll_performance.png",
-        help="Output PNG chart path",
-    )
+    parser = argparse.ArgumentParser(description="Render DLL scaling dashboard from live benchmark CSVs.")
+    parser.add_argument("--run", action="store_true", help="Recompile and run C++ binary before plotting")
+    parser.add_argument("--save", type=Path, default=repo_root / "results" / "dll_performance.png")
     parser.add_argument("--show", action="store_true", help="Display interactive matplotlib window")
     args = parser.parse_args()
 
     if not args.show:
         matplotlib.use("Agg")
 
-    rows = load_metrics(args.csv)
-    render_dll_scaling(rows, args.save, show=args.show)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from plot_benchmark import load_csv_rows, run_live_benchmarks
+
+    qpc_csv = repo_root / "results" / "benchmark_metrics.csv"
+    ds_csv = repo_root / "results" / "dataset_load_metrics.csv"
+    if args.run or not qpc_csv.exists() or not ds_csv.exists():
+        run_live_benchmarks(repo_root)
+
+    ds_rows = load_csv_rows(ds_csv)
+    qpc_rows = load_csv_rows(qpc_csv)
+    render_dll_dashboard(ds_rows, qpc_rows, args.save, show=args.show)
 
 
 if __name__ == "__main__":
