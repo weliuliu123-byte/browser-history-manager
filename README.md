@@ -13,7 +13,7 @@ A modular C++11 console application and benchmarking suite comparing a custom **
 - **History Engine (`BrowserHistory`):** Custom Doubly Linked List supporting `O(1)` forward/back pointer traversal, mid-history branch truncation on new visits, case-insensitive keyword search, and safe node relinking on deletion.
 - **Bounded Cache (`CacheStack`):** Singly-linked LIFO stack capped at `100` unique URLs, suppressing duplicates and evicting the oldest bottom node upon overflow.
 - **Benchmark Harness (`TwoStackSimulator` + QPC):** Measures 1,000-iteration average latency via Windows `QueryPerformanceCounter` and resident memory delta via `GetProcessMemoryInfo` (`psapi.dll`) across `N = 10` to `10,000`.
-- **Architecture & Algorithm Diagrams:** UML class design and orthogonal algorithm flowcharts stored under [`docs/diagrams/`](docs/diagrams/).
+- **Deterministic Engineering Diagrams:** Widescreen system architecture, UML class diagram, and code-grounded algorithm flowcharts generated via [`scripts/generate_diagrams.py`](scripts/generate_diagrams.py) into [`docs/diagrams/`](docs/diagrams/).
 
 ---
 
@@ -27,8 +27,8 @@ A modular C++11 console application and benchmarking suite comparing a custom **
 | **Benchmark Harness** | `TwoStackSimulator` vs DLL latency & PSAPI RAM delta profiler | Captured (`N = 10..10000`) | [`benchmarks/README.md`](benchmarks/README.md) |
 | **Unit & Parity Tests** | 5 C++ assertion suites (`UT-01..UT-05`) covering core & CSV ingestion | `5/5` Passed (exit `0`) | [`tests/README.md`](tests/README.md) |
 | **Tracked Workloads** | Synthetic `url,title` text datasets (`10` to `10,000` rows) | Verified CLI Option `11` | [`datasets/README.md`](datasets/README.md) |
-| **Plotting Scripts** | Log-log latency & dual-axis RAM/latency PNG chart generators | Rendered headlessly | [`scripts/README.md`](scripts/README.md) |
-| **Captured Results** | Raw QPC stdout report, metrics CSV, and rendered charts | Verified on Windows QPC | [`results/README.md`](results/README.md) |
+| **Live Runner & Plots** | Compiles C++ binary, runs Option `10` & `11`, renders diagrams & PNGs | Verified end-to-end | [`scripts/README.md`](scripts/README.md) |
+| **Captured Results** | Raw QPC stdout, dataset load CSV, and rendered PNG dashboards | Captured from live binary | [`results/README.md`](results/README.md) |
 | **Architecture Docs** | System architecture, UML class diagram, 4 algorithm flowcharts | Complete | [`docs/README.md`](docs/README.md) |
 
 ---
@@ -47,13 +47,13 @@ A modular C++11 console application and benchmarking suite comparing a custom **
 | `benchmarks/` | `TwoStackSimulator` implementation and multi-scale QPC profiler (`Benchmark.cpp`) |
 | `tests/` | Automated C++ unit and dataset parity suite (`test_history_and_cache.cpp`) |
 | `datasets/` | Python workload generator (`generate_datasets.py`) and generated `data_*.txt` workloads |
-| `scripts/` | Matplotlib visualization scripts (`plot_benchmark.py`, `plot_dll_scaling.py`) |
-| `results/` | Captured benchmark output (`benchmark_report.txt`, `benchmark_metrics.csv`, PNG charts) |
+| `scripts/` | Diagram generator & live benchmark pipeline (`generate_diagrams.py`, `plot_benchmark.py`, `plot_dll_scaling.py`) |
+| `results/` | Live benchmark outputs (`benchmark_report.txt`, `benchmark_metrics.csv`, `dataset_load_metrics.csv`, PNG charts) |
 | `docs/` | System design UML, architecture overview, and algorithm flowcharts (`docs/diagrams/`) |
 
 ---
 
-## Build, Test & Plot
+## Build, Test & Run Live Pipeline
 
 ### 1. Build & Run Interactive CLI
 ```bash
@@ -67,28 +67,37 @@ g++ -std=c++11 -O2 -Wall -Wextra -Iinclude tests/test_history_and_cache.cpp src/
 ./test_suite.exe
 ```
 
-### 3. Regenerate Datasets & Charts
+### 3. Run Live C++ Benchmark Pipeline & Regenerate Diagrams/Charts
 ```bash
-cd datasets && python generate_datasets.py && cd ..
-python scripts/plot_benchmark.py --save results/benchmark_latency.png
-python scripts/plot_dll_scaling.py --save results/dll_performance.png
+python scripts/generate_diagrams.py
+python scripts/plot_benchmark.py
 ```
 
 ---
 
-## Measured Benchmark Results (Windows QPC, 1,000 Iterations)
+## Live Measured Results (Compiled Binary Output)
 
-Captured verbatim in [`results/benchmark_report.txt`](results/benchmark_report.txt) and [`results/benchmark_metrics.csv`](results/benchmark_metrics.csv):
+### CLI Option `10` — Windows QPC & PSAPI Comparison (`benchmark_metrics.csv`)
 
 | `N` | DLL Memory Delta | TS Memory Delta | DLL Search (`us`) | TS Search (`us`) | DLL Delete (`us`) | TS Delete (`us`) | DLL Back (`us`) | TS Back (`us`) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `10` | `16.00 KB` | `4.00 KB` | `0.20` | `0.61` | `0.19` | `0.48` | `6.00e-04` | `2.70e-03` |
-| `100` | `24.00 KB` | `12.00 KB` | `1.80` | `5.22` | `1.55` | `5.33` | `1.40e-03` | `0.01` |
-| `1000` | `120.00 KB` | `100.00 KB` | `17.46` | `50.70` | `16.94` | `50.63` | `0.02` | `0.12` |
-| `5000` | `628.00 KB` | `528.00 KB` | `86.54` | `265.07` | `88.87` | `259.69` | `0.03` | `0.10` |
-| `10000` | `1052.00 KB` | `1024.00 KB` | `192.30` | `551.27` | `179.18` | `531.42` | `0.02` | `0.11` |
+| `10` | `16.00 KB` | `8.00 KB` | `0.20` | `0.61` | `0.16` | `0.49` | `6.00e-04` | `2.30e-03` |
+| `100` | `16.00 KB` | `8.00 KB` | `1.95` | `5.47` | `1.54` | `5.50` | `3.40e-03` | `0.02` |
+| `1000` | `128.00 KB` | `96.00 KB` | `17.69` | `55.97` | `18.07` | `62.47` | `0.03` | `0.11` |
+| `5000` | `632.00 KB` | `528.00 KB` | `92.27` | `273.58` | `95.55` | `271.40` | `0.02` | `0.09` |
+| `10000` | `1040.00 KB` | `1052.00 KB` | `191.06` | `534.34` | `185.47` | `510.49` | `0.02` | `0.11` |
+
+### CLI Option `11` — Tracked Dataset File Ingestion (`dataset_load_metrics.csv`)
+
+| Dataset File | Rows (`N`) | Load Elapsed Time (`us`) | Working Set (`KB`) |
+| :--- | :---: | :---: | :---: |
+| `datasets/data_10.txt` | `10` | `1000.00` | `4264` |
+| `datasets/data_100.txt` | `100` | `2000.00` | `4356` |
+| `datasets/data_1000.txt` | `1,000` | `14002.00` | `4632` |
+| `datasets/data_5000.txt` | `5,000` | `67000.00` | `5800` |
+| `datasets/data_10000.txt` | `10,000` | `127733.00` | `7112` |
 
 Visualizations:
 - Comparative 2x2 Latency Curve: [`results/benchmark_latency.png`](results/benchmark_latency.png)
-- DLL Memory vs `O(N)` Latency Scaling: [`results/dll_performance.png`](results/dll_performance.png)
+- Live DLL Ingestion & `O(N)` Scaling Dashboard: [`results/dll_performance.png`](results/dll_performance.png)
 - System UML & Algorithm Diagrams: [`docs/README.md`](docs/README.md)
