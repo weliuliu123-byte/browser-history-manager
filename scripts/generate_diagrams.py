@@ -481,25 +481,26 @@ def build_system_architecture(out_dir: Path, sodo_dir: Path = None):
     draw_box(ax, 55.5, 12.75, 24, 8.8, "Compiled C++ Binary\nLive Option 10 + Option 11 Run", fill=PALETTE["amber_fill"], edge=PALETTE["amber_edge"], fontsize=8.1)
     draw_box(ax, 83.0, 12.75, 23, 8.8, "results/*.csv + *.txt\n-> plot_*.py -> *.png", fill=PALETTE["green_fill"], edge=PALETTE["green_edge"], fontsize=8.1)
 
-    # Exact logical C++ call graph connectors across layer gutters:
-    # Options 1-9 -> BrowserHistory & CacheStack
-    draw_arrow(ax, (25.0, 75.85), (25.0, 63.95))
-    draw_polyline(ax, [(33.5, 75.85), (33.5, 70.6), (51.0, 70.6), (51.0, 63.95)])
-    # Option 10 -> BrowserHistory & TwoStackSimulator
-    draw_polyline(ax, [(48.0, 75.85), (48.0, 69.2), (29.5, 69.2), (29.5, 63.95)])
-    draw_polyline(ax, [(62.5, 75.85), (62.5, 69.2), (76.0, 69.2), (76.0, 63.95)])
-    # Option 11 -> BrowserHistory & CacheStack
-    draw_polyline(ax, [(79.0, 75.85), (79.0, 71.2), (59.5, 71.2), (59.5, 63.95)])
+    # Clean single horizontal bus between Layer 1 & Layer 2 (zero crossing!)
+    ax.plot([27.5, 83.0], [70.0, 70.0], color=PALETTE["arrow"], linewidth=1.6, zorder=2, solid_capstyle="round")
+    for x_top in (27.5, 55.5, 83.0):
+        ax.plot([x_top, x_top], [75.85, 70.0], color=PALETTE["arrow"], linewidth=1.45, zorder=2)
+        draw_arrow(ax, (x_top, 70.0), (x_top, 63.95))
 
-    # Layer 2 -> Layer 3 dependencies
-    draw_arrow(ax, (25.0, 52.55), (25.0, 40.35))
-    draw_polyline(ax, [(55.5, 52.55), (55.5, 46.5), (32.5, 46.5), (32.5, 40.35)])
-    draw_polyline(ax, [(78.5, 52.55), (78.5, 46.5), (55.5, 46.5), (55.5, 40.35)])
-    draw_arrow(ax, (84.5, 52.55), (84.5, 40.35))
+    # Clean two-segment orthogonal routing between Layer 2 & Layer 3 (left bus: data models; right bus: probes)
+    ax.plot([27.5, 55.5], [46.5, 46.5], color=PALETTE["arrow"], linewidth=1.5, zorder=2, solid_capstyle="round")
+    ax.plot([27.5, 27.5], [52.55, 46.5], color=PALETTE["arrow"], linewidth=1.45, zorder=2)
+    ax.plot([55.5, 55.5], [52.55, 46.5], color=PALETTE["arrow"], linewidth=1.45, zorder=2)
+    draw_arrow(ax, (27.5, 46.5), (27.5, 40.35))
 
-    # Layer 3 -> Layer 4 pipeline handoff + Stage-4 left-to-right data flow
+    ax.plot([55.5, 83.0], [44.8, 44.8], color=PALETTE["slate_edge"], linewidth=1.5, zorder=2, solid_capstyle="round")
+    ax.plot([83.0, 83.0], [52.55, 44.8], color=PALETTE["slate_edge"], linewidth=1.45, zorder=2)
+    draw_arrow(ax, (55.5, 44.8), (55.5, 40.35), color=PALETTE["slate_edge"])
+    draw_arrow(ax, (83.0, 44.8), (83.0, 40.35), color=PALETTE["slate_edge"])
+
+    # Clean 100% orthogonal Layer 3 -> Layer 4 connectors (no diagonal lines!)
     draw_arrow(ax, (55.5, 30.15), (55.5, 17.15))
-    draw_arrow(ax, (83.0, 30.15), (63.0, 17.15))
+    draw_polyline(ax, [(83.0, 30.15), (83.0, 23.8), (61.5, 23.8), (61.5, 17.15)])
     draw_arrow(ax, (39.5, 12.75), (43.5, 12.75))
     draw_arrow(ax, (67.5, 12.75), (71.5, 12.75))
 
