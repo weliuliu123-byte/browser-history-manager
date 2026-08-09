@@ -8,7 +8,20 @@ A modular C++11 console application and benchmarking suite comparing a custom **
 
 ---
 
+## Development Environment & Toolchain
+
+| Component | Specification |
+| :--- | :--- |
+| **Operating System** | Windows (Win32 `QueryPerformanceCounter` & `psapi.dll`) |
+| **C++ Compiler** | `g++` (TDM-GCC-64) with `-std=c++11 -O2 -Wall -Wextra` |
+| **Build & Link Flags** | `-Iinclude -lpsapi` (or `make all` / `make test`) |
+| **Python & Plotting** | Python 3 with `matplotlib` (`scripts/generate_diagrams.py`, `scripts/plot_benchmark.py`, `scripts/plot_dll_scaling.py`) |
+
+---
+
 ## System Architecture
+
+![System Architecture](docs/diagrams/5_System_Architecture.png)
 
 - **History Engine (`BrowserHistory`):** Custom Doubly Linked List supporting `O(1)` forward/back pointer traversal, mid-history branch truncation on new visits, case-insensitive keyword search, and safe node relinking on deletion.
 - **Bounded Cache (`CacheStack`):** Singly-linked LIFO stack capped at `100` unique URLs, suppressing duplicates and evicting the oldest bottom node upon overflow.
@@ -37,19 +50,19 @@ A modular C++11 console application and benchmarking suite comparing a custom **
 
 | Path | Description |
 | :--- | :--- |
-| `README.md` | Root architecture overview, build/test steps, and measured results |
-| `CONTRIBUTING.md` | Development order, branching rules, Conventional Commits, and scope mapping |
-| `Makefile` | CLI build and automated test targets (`all`, `test`, `clean`) |
-| `Project_topic_9.dev` | Dev-C++ IDE project configuration |
-| `.gitignore` | Excludes compiled binaries (`*.exe`, `*.o`), Python caches, and IDE clutter |
-| `include/` | Clean header contracts (`Page.h`, `DLLNode.h`, `BrowserHistory.h`, `CacheStack.h`, `Benchmark.h`, `Utils.h`) |
-| `src/` | Core C++ source files (`main.cpp`, `BrowserHistory.cpp`, `CacheStack.cpp`, `Utils.cpp`) |
-| `benchmarks/` | `TwoStackSimulator` implementation and multi-scale QPC profiler (`Benchmark.cpp`) |
-| `tests/` | Automated C++ unit and dataset parity suite (`test_history_and_cache.cpp`) |
-| `datasets/` | Python workload generator (`generate_datasets.py`) and generated `data_*.txt` workloads |
-| `scripts/` | Diagram generator & live benchmark pipeline (`generate_diagrams.py`, `plot_benchmark.py`, `plot_dll_scaling.py`) |
-| `results/` | Live benchmark outputs (`benchmark_report.txt`, `benchmark_metrics.csv`, `dataset_load_metrics.csv`, PNG charts) |
-| `docs/` | System design UML, architecture overview, and algorithm flowcharts (`docs/diagrams/`) |
+| [`README.md`](README.md) | Root architecture overview, build/test steps, and measured results |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development order, branching rules, Conventional Commits, and scope mapping |
+| [`Makefile`](Makefile) | CLI build and automated test targets (`all`, `test`, `clean`) |
+| [`Project_topic_9.dev`](Project_topic_9.dev) | Dev-C++ IDE project configuration |
+| [`.gitignore`](.gitignore) | Excludes compiled binaries (`*.exe`, `*.o`), Python caches, and IDE clutter |
+| [`include/`](include/) | Clean header contracts (`Page.h`, `DLLNode.h`, `BrowserHistory.h`, `CacheStack.h`, `Benchmark.h`, `Utils.h`) |
+| [`src/`](src/) | Core C++ source files (`main.cpp`, `BrowserHistory.cpp`, `CacheStack.cpp`, `Utils.cpp`) |
+| [`benchmarks/`](benchmarks/) | `TwoStackSimulator` implementation and multi-scale QPC profiler (`Benchmark.cpp`) |
+| [`tests/`](tests/) | Automated C++ unit and dataset parity suite (`test_history_and_cache.cpp`) |
+| [`datasets/`](datasets/) | Python workload generator (`generate_datasets.py`) and generated `data_*.txt` workloads |
+| [`scripts/`](scripts/) | Diagram generator & live benchmark pipeline (`generate_diagrams.py`, `plot_benchmark.py`, `plot_dll_scaling.py`) |
+| [`results/`](results/) | Live benchmark outputs (`benchmark_report.txt`, `benchmark_metrics.csv`, `dataset_load_metrics.csv`, PNG charts) |
+| [`docs/`](docs/) | System design UML, architecture overview, and algorithm flowcharts (`docs/diagrams/`) |
 
 ---
 
@@ -97,7 +110,12 @@ python scripts/plot_benchmark.py
 | `datasets/data_5000.txt` | `5,000` | `67000.00` | `5800` |
 | `datasets/data_10000.txt` | `10,000` | `127733.00` | `7112` |
 
-Visualizations:
+### Visualizations
+
 - Comparative 2x2 Latency Curve: [`results/benchmark_latency.png`](results/benchmark_latency.png)
 - Live DLL Ingestion & `O(N)` Scaling Dashboard: [`results/dll_performance.png`](results/dll_performance.png)
 - System UML & Algorithm Diagrams: [`docs/README.md`](docs/README.md)
+
+![Latency Comparison](results/benchmark_latency.png)
+
+![Live DLL Performance](results/dll_performance.png)
