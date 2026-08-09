@@ -449,60 +449,55 @@ def build_system_architecture(out_dir: Path, sodo_dir: Path = None):
         "Layered decomposition separating CLI control, data structures, OS probes, datasets, tests, and plotting"
     )
 
-    draw_layer_band(ax, 72.5, 15.5, "LAYER 1", "CLI Menu\nsrc/main.cpp", PALETTE["navy_fill"])
-    draw_box(ax, 27.5, 80.25, 25, 8.8, "Interactive Options 1-9\nvisit, back, forward, search, delete, cache", fill=PALETTE["blue_fill"], edge=PALETTE["blue_edge"], fontsize=8.1)
-    draw_box(ax, 55.5, 80.25, 25, 8.8, "Option 10: QPC Benchmark\nRuns N=10..10000 Latency & RAM Sweep", fill=PALETTE["amber_fill"], edge=PALETTE["amber_edge"], fontsize=8.1)
-    draw_box(ax, 83.0, 80.25, 24, 8.8, "Option 11: Dataset Loader\nParses datasets/data_<N>.txt", fill=PALETTE["teal_fill"], edge=PALETTE["teal_edge"], fontsize=8.1)
+    draw_layer_band(ax, 74.0, 14.0, "LAYER 1", "CLI Menu\nsrc/main.cpp", PALETTE["navy_fill"])
+    draw_box(ax, 27.5, 81.0, 25, 8.4, "Interactive Options 1-9\nvisit, back, forward, search, delete, cache", fill=PALETTE["blue_fill"], edge=PALETTE["blue_edge"], fontsize=8.1)
+    draw_box(ax, 55.5, 81.0, 25, 8.4, "Option 11: Dataset Loader\nParses datasets/data_<N>.txt", fill=PALETTE["teal_fill"], edge=PALETTE["teal_edge"], fontsize=8.1)
+    draw_box(ax, 83.0, 81.0, 24, 8.4, "Option 10: QPC Benchmark\nRuns N=10..10000 Latency & RAM Sweep", fill=PALETTE["amber_fill"], edge=PALETTE["amber_edge"], fontsize=8.1)
 
-    draw_layer_band(ax, 49.0, 18.5, "LAYER 2", "Core Engines\n& Tests", PALETTE["blue_edge"])
-    draw_box(ax, 27.5, 58.25, 25, 11.4,
+    draw_layer_band(ax, 51.0, 17.5, "LAYER 2", "Core Engines\n& Tests", PALETTE["blue_edge"])
+    draw_box(ax, 27.5, 59.75, 25, 11.0,
              "Doubly Linked List (head, current)\nO(1) back/forward; O(N) scan/delete",
              title="BrowserHistory", fill=PALETTE["blue_fill"], edge=PALETTE["blue_edge"], fontsize=8.0)
-    draw_box(ax, 55.5, 58.25, 25, 11.4,
+    draw_box(ax, 55.5, 59.75, 25, 11.0,
              "Bounded Singly-Linked Stack (max 100)\nDuplicate URL guard + bottom eviction",
              title="CacheStack", fill=PALETTE["teal_fill"], edge=PALETTE["teal_edge"], fontsize=8.0)
-    draw_box(ax, 83.0, 58.25, 24, 11.4,
+    draw_box(ax, 83.0, 59.75, 24, 11.0,
              "Reference std::stack<Page> Model\nOption 10 baseline & UT-01..UT-05",
              title="TwoStack & Tests", fill=PALETTE["green_fill"], edge=PALETTE["green_edge"], fontsize=8.0)
 
-    draw_layer_band(ax, 26.5, 17.5, "LAYER 3", "Models &\nOS Probes", PALETTE["slate_edge"])
-    draw_box(ax, 27.5, 35.25, 25, 10.2,
+    draw_layer_band(ax, 28.0, 16.5, "LAYER 3", "Models &\nOS Probes", PALETTE["slate_edge"])
+    draw_box(ax, 27.5, 36.25, 25, 10.0,
              "Page {url, title, visitTime}\nDLLNode & CacheStack::StackNode",
              title="Structs & Records (include/)", fill=PALETTE["slate_fill"], edge=PALETTE["slate_edge"], fontsize=7.9)
-    draw_box(ax, 55.5, 35.25, 25, 10.2,
+    draw_box(ax, 55.5, 36.25, 25, 10.0,
              "QueryPerformanceCounter / Frequency\nstd::chrono high-resolution timing",
              title="Sub-Microsecond Timer", fill=PALETTE["amber_fill"], edge=PALETTE["amber_edge"], fontsize=7.9)
-    draw_box(ax, 83.0, 35.25, 24, 10.2,
+    draw_box(ax, 83.0, 36.25, 24, 10.0,
              "psapi.dll -> GetProcessMemoryInfo\nWorkingSetSize KB Probe",
              title="PSAPI Memory Probe", fill=PALETTE["red_fill"], edge=PALETTE["red_edge"], fontsize=7.9)
 
-    draw_layer_band(ax, 4.5, 16.5, "LAYER 4", "Data & Plot\nPipeline", PALETTE["green_edge"])
-    draw_box(ax, 27.5, 12.75, 24, 8.8, "datasets/generate_datasets.py\n-> data_{10..10000}.txt", fill=PALETTE["blue_fill"], edge=PALETTE["blue_edge"], fontsize=8.1)
-    draw_box(ax, 55.5, 12.75, 24, 8.8, "Compiled C++ Binary\nLive Option 10 + Option 11 Run", fill=PALETTE["amber_fill"], edge=PALETTE["amber_edge"], fontsize=8.1)
-    draw_box(ax, 83.0, 12.75, 23, 8.8, "results/*.csv + *.txt\n-> plot_*.py -> *.png", fill=PALETTE["green_fill"], edge=PALETTE["green_edge"], fontsize=8.1)
+    draw_layer_band(ax, 5.0, 16.0, "LAYER 4", "Data & Plot\nPipeline", PALETTE["green_edge"])
+    draw_box(ax, 27.5, 13.0, 24, 8.6, "datasets/generate_datasets.py\n-> data_{10..10000}.txt", fill=PALETTE["blue_fill"], edge=PALETTE["blue_edge"], fontsize=8.1)
+    draw_box(ax, 55.5, 13.0, 24, 8.6, "Compiled C++ Binary\nLive Option 10 + Option 11 Run", fill=PALETTE["amber_fill"], edge=PALETTE["amber_edge"], fontsize=8.1)
+    draw_box(ax, 83.0, 13.0, 23, 8.6, "results/*.csv + *.txt\n-> plot_*.py -> *.png", fill=PALETTE["green_fill"], edge=PALETTE["green_edge"], fontsize=8.1)
 
-    # Clean single horizontal bus between Layer 1 & Layer 2 (zero crossing!)
-    ax.plot([27.5, 83.0], [70.0, 70.0], color=PALETTE["arrow"], linewidth=1.6, zorder=2, solid_capstyle="round")
-    for x_top in (27.5, 55.5, 83.0):
-        ax.plot([x_top, x_top], [75.85, 70.0], color=PALETTE["arrow"], linewidth=1.45, zorder=2)
-        draw_arrow(ax, (x_top, 70.0), (x_top, 63.95))
+    # Layer 1 -> Layer 2: 3 direct vertical arrows (zero bus, zero crossing) + intra-layer sync arrow
+    draw_arrow(ax, (27.5, 76.8), (27.5, 65.25))
+    draw_arrow(ax, (55.5, 76.8), (55.5, 65.25))
+    draw_arrow(ax, (83.0, 76.8), (83.0, 65.25))
+    draw_arrow(ax, (40.0, 59.75), (43.0, 59.75))
 
-    # Clean two-segment orthogonal routing between Layer 2 & Layer 3 (left bus: data models; right bus: probes)
-    ax.plot([27.5, 55.5], [46.5, 46.5], color=PALETTE["arrow"], linewidth=1.5, zorder=2, solid_capstyle="round")
-    ax.plot([27.5, 27.5], [52.55, 46.5], color=PALETTE["arrow"], linewidth=1.45, zorder=2)
-    ax.plot([55.5, 55.5], [52.55, 46.5], color=PALETTE["arrow"], linewidth=1.45, zorder=2)
-    draw_arrow(ax, (27.5, 46.5), (27.5, 40.35))
+    # Layer 2 -> Layer 3: non-overlapping ports with 5-unit horizontal separation (x=33.5..50.5 vs x=55.5..77.0)
+    draw_arrow(ax, (27.5, 54.25), (27.5, 41.25))
+    draw_polyline(ax, [(50.5, 54.25), (50.5, 47.75), (33.5, 47.75), (33.5, 41.25)])
+    draw_polyline(ax, [(77.0, 54.25), (77.0, 47.75), (55.5, 47.75), (55.5, 41.25)], color=PALETTE["slate_edge"])
+    draw_arrow(ax, (83.0, 54.25), (83.0, 41.25), color=PALETTE["slate_edge"])
 
-    ax.plot([55.5, 83.0], [44.8, 44.8], color=PALETTE["slate_edge"], linewidth=1.5, zorder=2, solid_capstyle="round")
-    ax.plot([83.0, 83.0], [52.55, 44.8], color=PALETTE["slate_edge"], linewidth=1.45, zorder=2)
-    draw_arrow(ax, (55.5, 44.8), (55.5, 40.35), color=PALETTE["slate_edge"])
-    draw_arrow(ax, (83.0, 44.8), (83.0, 40.35), color=PALETTE["slate_edge"])
-
-    # Clean 100% orthogonal Layer 3 -> Layer 4 connectors (no diagonal lines!)
-    draw_arrow(ax, (55.5, 30.15), (55.5, 17.15))
-    draw_polyline(ax, [(83.0, 30.15), (83.0, 23.8), (61.5, 23.8), (61.5, 17.15)])
-    draw_arrow(ax, (39.5, 12.75), (43.5, 12.75))
-    draw_arrow(ax, (67.5, 12.75), (71.5, 12.75))
+    # Layer 3 -> Layer 4: clean orthogonal connectors (zero diagonal lines, zero crossings)
+    draw_arrow(ax, (55.5, 31.25), (55.5, 17.3))
+    draw_polyline(ax, [(83.0, 31.25), (83.0, 24.5), (61.5, 24.5), (61.5, 17.3)], color=PALETTE["slate_edge"])
+    draw_arrow(ax, (39.5, 13.0), (43.5, 13.0))
+    draw_arrow(ax, (67.5, 13.0), (71.5, 13.0))
 
     save_diagram(fig, out_dir, "5_System_Architecture.png", sodo_dir)
 
