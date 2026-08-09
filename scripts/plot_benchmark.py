@@ -180,8 +180,14 @@ def render_comparison(qpc_rows, save_path: Path, show: bool = False):
         ax.set_ylabel("Average latency (us)", labelpad=8)
         ax.set_xscale("log")
         ax.set_yscale("log")
-        ax.grid(True, which="both", linestyle="--", alpha=0.45)
-        ax.legend(frameon=True, facecolor="#FFFFFF", framealpha=0.95)
+        ax.minorticks_off()
+        ax.set_axisbelow(True)
+        ax.grid(True, which="major", linestyle="-", linewidth=0.75, color="#E2E8F0", alpha=0.95)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("#94A3B8")
+        ax.spines["bottom"].set_color("#94A3B8")
+        ax.legend(frameon=True, facecolor="#FFFFFF", edgecolor="#E2E8F0", framealpha=0.95)
 
         if y_dll[-1] > 0:
             speedup = y_ts[-1] / y_dll[-1]
